@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>にゃんこ図鑑 Pro 完全版</title>
+  <title>にゃんこ図鑑 Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="にゃんこ図鑑">
@@ -10,340 +10,298 @@
   <style>
     body { background:#121212; color:#fff; font-family:sans-serif; margin:0; }
     header { display:flex; justify-content:space-between; align-items:center; padding:10px; background:#1e1e1e; }
-    header h1 { font-size:18px; margin:0; }
-    nav button { margin:0 2px; padding:6px 12px; font-size:14px; }
-    .dark { background:#121212; color:#fff; }
-    .light { background:#fff; color:#000; }
-    .hidden { display:none; }
-    .form-section { padding:10px; }
-    .form-section input, .form-section textarea, .form-section select { width:100%; margin:4px 0; padding:6px; }
-    .big-btn { font-size:18px; padding:10px; width:100%; margin:10px 0; }
-    .catalog { padding:10px; }
-    .list-view .card { background:#1e1e1e; padding:8px; margin:4px 0; border-radius:4px; }
-    .grid-view { display:grid; grid-template-columns:repeat(auto-fill,100px); gap:8px; }
-    .grid-view .card { background:#1e1e1e; width:100px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .grid-view img { width:100px; height:100px; object-fit:cover; }
-    .card img { max-width:80px; max-height:80px; }
-    .modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; }
-    .modal-content { background:#1e1e1e; padding:20px; border-radius:6px; max-height:80%; overflow:auto; }
-    .trash { padding:10px; }
-    .trait { display:flex; gap:4px; margin:2px 0; }
-    .filters { padding:10px; background:#1e1e1e; }
+    button { padding:10px 20px; margin:5px; font-size:16px; }
+    input, select, textarea { background:#1e1e1e; color:#fff; border:1px solid #444; padding:5px; margin:2px 0; }
+    .tab { display:none; padding:10px; }
+    .active { display:block; }
+    .char-card { background:#1e1e1e; margin:5px 0; padding:10px; border:1px solid #444; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,100px); gap:10px; }
+    .grid-item { width:100px; text-align:center; }
+    .grid-item img { width:100px; height:100px; object-fit:cover; }
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); }
+    .modal-content { background:#1e1e1e; margin:10% auto; padding:20px; width:90%; max-width:600px; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>にゃんこ図鑑 Pro</h1>
-    <div>
-      <button onclick="toggleDark()">🌙/☀️</button>
-      <button onclick="showTab('register')">登録</button>
-      <button onclick="showTab('catalog')">図鑑</button>
-      <button onclick="showTab('trash')">ゴミ箱</button>
-    </div>
-  </header>
+<header>
+  <div>
+    <button onclick="showTab('register')">登録</button>
+    <button onclick="showTab('catalog')">図鑑</button>
+    <button onclick="showTab('trash')">ゴミ箱</button>
+  </div>
+  <div>
+    <button onclick="toggleDarkMode()">🌙/☀️</button>
+  </div>
+</header>
 
-  <!-- 登録画面 -->
-  <section id="register" class="form-section">
-    <button class="big-btn" onclick="saveCharacter()">保存</button>
-    <label>No:<input id="charNo" type="text"></label>
-    <label>名前:<input id="charName" type="text"></label>
-    <div>
-      レアリティ:
-      <label><input type="checkbox" name="rarity" value="基本">基本</label>
-      <label><input type="checkbox" name="rarity" value="EX">EX</label>
-      <label><input type="checkbox" name="rarity" value="レア">レア</label>
-      <label><input type="checkbox" name="rarity" value="激レア">激レア</label>
-      <label><input type="checkbox" name="rarity" value="超激レア">超激レア</label>
-      <label><input type="checkbox" name="rarity" value="伝説レア">伝説レア</label>
-    </div>
+<!-- 登録タブ -->
+<div id="register" class="tab active">
+  <h2>キャラ登録</h2>
+  <label>No:<input type="number" id="charNo"></label>
+  <div>
+    レアリティ:
+    <label><input type="checkbox" value="基本" class="rarity">基本</label>
+    <label><input type="checkbox" value="EX" class="rarity">EX</label>
+    <label><input type="checkbox" value="レア" class="rarity">レア</label>
+    <label><input type="checkbox" value="激レア" class="rarity">激レア</label>
+    <label><input type="checkbox" value="超激レア" class="rarity">超激レア</label>
+    <label><input type="checkbox" value="伝説レア" class="rarity">伝説レア</label>
+  </div>
+  <div>
+    表示単位:
+    <select id="unitSelect">
+      <option value="sec">秒</option>
+      <option value="fps30">30fps(iOS)</option>
+      <option value="fps27">27fps(Android)</option>
+    </select>
+  </div>
+  <div id="forms"></div>
+  <button onclick="saveCharacter()" style="font-size:20px;">保存</button>
+</div>
 
-    <div id="forms"></div>
-  </section>
+<!-- 図鑑タブ -->
+<div id="catalog" class="tab">
+  <h2>図鑑</h2>
+  <div>
+    名前検索:<input id="searchName">
+    特性検索:<input id="searchTrait">
+    属性検索:<input id="searchAttr">
+    <label><input type="radio" name="andor" value="and" checked>AND</label>
+    <label><input type="radio" name="andor" value="or">OR</label>
+  </div>
+  <div>
+    レアリティ:
+    <label><input type="checkbox" class="filter-rarity" value="基本">基本</label>
+    <label><input type="checkbox" class="filter-rarity" value="EX">EX</label>
+    <label><input type="checkbox" class="filter-rarity" value="レア">レア</label>
+    <label><input type="checkbox" class="filter-rarity" value="激レア">激レア</label>
+    <label><input type="checkbox" class="filter-rarity" value="超激レア">超激レア</label>
+    <label><input type="checkbox" class="filter-rarity" value="伝説レア">伝説レア</label>
+  </div>
+  <div>
+    表示:<button onclick="setView('list')">リスト</button>
+         <button onclick="setView('grid')">グリッド</button>
+    <label><input type="checkbox" id="gridShowNo">番号表示</label>
+  </div>
+  <div id="catalogList"></div>
+</div>
 
-  <!-- 図鑑画面 -->
-  <section id="catalog" class="catalog hidden">
-    <div class="filters">
-      <input id="searchName" placeholder="名前検索">
-      <input id="searchTrait" placeholder="特性検索">
-      <label><input type="radio" name="mode" value="AND" checked>AND</label>
-      <label><input type="radio" name="mode" value="OR">OR</label>
-      <div>
-        レアリティ:
-        <label><input type="checkbox" class="filterRarity" value="基本">基本</label>
-        <label><input type="checkbox" class="filterRarity" value="EX">EX</label>
-        <label><input type="checkbox" class="filterRarity" value="レア">レア</label>
-        <label><input type="checkbox" class="filterRarity" value="激レア">激レア</label>
-        <label><input type="checkbox" class="filterRarity" value="超激レア">超激レア</label>
-        <label><input type="checkbox" class="filterRarity" value="伝説レア">伝説レア</label>
-      </div>
-      <button onclick="toggleView()">表示切替</button>
-      <label><input type="checkbox" id="showNumbers">番号を表示(グリッド)</label>
-    </div>
-    <div id="catalogList" class="list-view"></div>
-  </section>
+<!-- ゴミ箱タブ -->
+<div id="trash" class="tab">
+  <h2>ゴミ箱</h2>
+  <div id="trashList"></div>
+</div>
 
-  <!-- ゴミ箱画面 -->
-  <section id="trash" class="trash hidden"></section>
-
-  <div id="modal" class="modal"><div class="modal-content" id="modalContent"></div></div>
+<!-- 詳細モーダル -->
+<div id="detailModal" class="modal">
+  <div class="modal-content" id="detailContent"></div>
+</div>
 
 <script>
-let characters = JSON.parse(localStorage.getItem("characters")||"[]");
-let trash = JSON.parse(localStorage.getItem("trash")||"[]");
+let characters = JSON.parse(localStorage.getItem("nyankoChars")||"[]");
+let trash = JSON.parse(localStorage.getItem("nyankoTrash")||"[]");
 let editIndex = null;
-let gridView = false;
+let viewMode = "list";
 
-// 初期化
-document.addEventListener("DOMContentLoaded", ()=>{
-  renderForms();
-  renderCatalog();
-  cleanupTrash();
-});
-
-// タブ切替
 function showTab(tab){
-  document.getElementById("register").classList.add("hidden");
-  document.getElementById("catalog").classList.add("hidden");
-  document.getElementById("trash").classList.add("hidden");
-  document.getElementById(tab).classList.remove("hidden");
-  if(tab=="catalog") renderCatalog();
-  if(tab=="trash") renderTrash();
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById(tab).classList.add("active");
+  if(tab==="catalog") renderCatalog();
+  if(tab==="trash") renderTrash();
 }
 
-// ダークモード
-function toggleDark(){
-  document.body.classList.toggle("light");
+function toggleDarkMode(){
+  document.body.style.background = (document.body.style.background==="#121212") ? "#fff":"#121212";
+  document.body.style.color = (document.body.style.color==="#fff") ? "#000":"#fff";
 }
 
-// 入力フォーム生成
-function renderForms(){
-  let html="";
+function initForms(){
+  let formsDiv=document.getElementById("forms");
+  formsDiv.innerHTML="";
   for(let i=1;i<=4;i++){
-    html+=`
+    formsDiv.innerHTML+=`
     <fieldset>
       <legend>第${i}形態</legend>
-      <input id="form${i}Name" placeholder="形態名">
-      <textarea id="form${i}Desc" placeholder="説明 (Markdown対応)"></textarea>
-      <input type="file" id="form${i}Image" onchange="previewImage(event,${i})">
-      <img id="form${i}ImagePreview" style="max-width:100px;max-height:100px;">
-      <input id="form${i}HP" placeholder="体力">
-      <input id="form${i}Atk" placeholder="攻撃力">
-      <input id="form${i}Range" placeholder="射程">
-      <input id="form${i}DPS" placeholder="DPS">
-      <input id="form${i}Cost" placeholder="コスト">
-      <input id="form${i}KB" placeholder="KB数">
-      <input id="form${i}Speed" placeholder="移動速度">
-      <input id="form${i}Respawn" placeholder="再生産時間(秒)">
-      <input id="form${i}Startup" placeholder="攻撃発生(秒)">
-      <input id="form${i}Interval" placeholder="攻撃頻度(秒)">
-      <div id="traits${i}"></div>
+      名前:<input id="form${i}Name"><br>
+      説明:<textarea id="form${i}Desc"></textarea><br>
+      画像:<input type="file" accept="image/*" onchange="previewImage(event,'form${i}ImagePreview')"><br>
+      <img id="form${i}ImagePreview" style="width:80px;height:80px;"><br>
+      体力:<input type="number" id="form${i}HP"><br>
+      攻撃力:<input type="number" id="form${i}Atk"><br>
+      射程:<input type="number" id="form${i}Range"><br>
+      DPS:<input type="number" id="form${i}DPS"><br>
+      コスト:<input type="number" id="form${i}Cost"><br>
+      KB:<input type="number" id="form${i}KB"><br>
+      移動速度:<input type="number" id="form${i}Speed"><br>
+      再生産:<input type="number" id="form${i}Respawn"><br>
+      攻撃発生:<input type="number" id="form${i}Start"><br>
+      攻撃頻度:<input type="number" id="form${i}Freq"><br>
+      属性:<input id="form${i}Attr"><br>
+      特性:<div id="traits${i}"></div>
       <button type="button" onclick="addTrait(${i})">特性追加</button>
     </fieldset>`;
   }
-  document.getElementById("forms").innerHTML=html;
 }
+initForms();
 
-function previewImage(e,i){
+function previewImage(event,id){
   let reader=new FileReader();
-  reader.onload=()=>{ document.getElementById(`form${i}ImagePreview`).src=reader.result; };
-  reader.readAsDataURL(e.target.files[0]);
+  reader.onload=function(e){ document.getElementById(id).src=e.target.result; }
+  reader.readAsDataURL(event.target.files[0]);
 }
 
-// 特性追加
 function addTrait(i){
-  let div=document.createElement("div");
-  div.className="trait";
-  div.innerHTML=`
-    <input placeholder="特性名">
-    <input type="number" placeholder="%">
-    <input placeholder="効果時間(秒)">
-    <input placeholder="Lv">`;
-  document.getElementById("traits"+i).appendChild(div);
+  let div=document.getElementById("traits"+i);
+  div.innerHTML+=`<div>
+    名称:<input class="traitName">
+    確率:<input type="number" class="traitChance">%
+    効果時間:<input type="number" class="traitDuration">秒
+    属性:<input class="traitAttr">
+  </div>`;
 }
 
 function collectTraits(i){
   let traits=[];
-  document.querySelectorAll(`#traits${i} .trait`).forEach(tr=>{
+  document.querySelectorAll(`#traits${i} div`).forEach(d=>{
     traits.push({
-      name: tr.children[0].value,
-      prob: tr.children[1].value,
-      duration: tr.children[2].value,
-      level: tr.children[3].value
+      name:d.querySelector(".traitName").value,
+      chance:d.querySelector(".traitChance").value,
+      duration:d.querySelector(".traitDuration").value,
+      attr:d.querySelector(".traitAttr").value
     });
   });
   return traits;
 }
 
-// 保存処理
 function saveCharacter(){
-  let char={
-    no: document.getElementById("charNo").value,
-    name: document.getElementById("charName").value,
-    rarity: Array.from(document.querySelectorAll("input[name=rarity]:checked")).map(r=>r.value),
-    forms:[]
-  };
+  let char={ no:document.getElementById("charNo").value, rarities:[], forms:[] };
+  document.querySelectorAll(".rarity:checked").forEach(r=>char.rarities.push(r.value));
   for(let i=1;i<=4;i++){
+    let atk=+document.getElementById(`form${i}Atk`).value||0;
+    let freq=+document.getElementById(`form${i}Freq`).value||1;
+    let dps=+document.getElementById(`form${i}DPS`).value||Math.floor(atk/freq);
     char.forms.push({
-      formName: document.getElementById(`form${i}Name`).value,
-      formDesc: document.getElementById(`form${i}Desc`).value,
-      image: document.getElementById(`form${i}ImagePreview`).src,
-      hp: document.getElementById(`form${i}HP`).value,
-      atk: document.getElementById(`form${i}Atk`).value,
-      range: document.getElementById(`form${i}Range`).value,
-      dps: document.getElementById(`form${i}DPS`).value,
-      cost: document.getElementById(`form${i}Cost`).value,
-      kb: document.getElementById(`form${i}KB`).value,
-      speed: document.getElementById(`form${i}Speed`).value,
-      respawn: document.getElementById(`form${i}Respawn`).value,
-      startup: document.getElementById(`form${i}Startup`).value,
-      interval: document.getElementById(`form${i}Interval`).value,
-      traits: collectTraits(i)
+      name:document.getElementById(`form${i}Name`).value,
+      desc:document.getElementById(`form${i}Desc`).value,
+      image:document.getElementById(`form${i}ImagePreview`).src,
+      hp:document.getElementById(`form${i}HP`).value,
+      atk:atk,
+      range:document.getElementById(`form${i}Range`).value,
+      dps:dps,
+      cost:document.getElementById(`form${i}Cost`).value,
+      kb:document.getElementById(`form${i}KB`).value,
+      speed:document.getElementById(`form${i}Speed`).value,
+      respawn:document.getElementById(`form${i}Respawn`).value,
+      start:document.getElementById(`form${i}Start`).value,
+      freq:freq,
+      attr:document.getElementById(`form${i}Attr`).value,
+      traits:collectTraits(i)
     });
   }
-  if(editIndex!==null){
-    characters[editIndex]=char;
-    editIndex=null;
-  }else{
-    characters.push(char);
-  }
-  saveData();
-  showTab("catalog");
+  if(editIndex!==null){ characters[editIndex]=char; editIndex=null; }
+  else characters.push(char);
+  saveData(); showTab("catalog");
 }
 
-// データ保存
 function saveData(){
-  localStorage.setItem("characters",JSON.stringify(characters));
-  localStorage.setItem("trash",JSON.stringify(trash));
+  localStorage.setItem("nyankoChars",JSON.stringify(characters));
+  localStorage.setItem("nyankoTrash",JSON.stringify(trash));
 }
 
-// カタログ表示
 function renderCatalog(){
-  let container=document.getElementById("catalogList");
-  container.innerHTML="";
-  container.className=gridView?"grid-view":"list-view";
-  let searchName=document.getElementById("searchName").value;
-  let searchTrait=document.getElementById("searchTrait").value;
-  let rarities=Array.from(document.querySelectorAll(".filterRarity:checked")).map(r=>r.value);
-  let mode=document.querySelector("input[name=mode]:checked").value;
-  let showNumbers=document.getElementById("showNumbers").checked;
-
-  characters.forEach((c,idx)=>{
-    // フィルタ処理
-    if(searchName && !c.name.includes(searchName)) return;
-    if(rarities.length>0 && !rarities.some(r=>c.rarity.includes(r))) return;
-    if(searchTrait){
-      let traits=c.forms.flatMap(f=>f.traits.map(t=>t.name));
-      if(mode=="AND" && !traits.includes(searchTrait)) return;
-      if(mode=="OR" && traits.length && !traits.some(t=>t.includes(searchTrait))) return;
-    }
-
-    let card=document.createElement("div");
-    card.className="card";
-    if(gridView){
-      let img=document.createElement("img");
-      img.src=c.forms[0].image||"";
-      card.appendChild(img);
-      if(showNumbers) card.innerHTML+=`<div>No.${c.no||""}</div>`;
-      card.onclick=()=>showDetail(c,idx);
-    }else{
-      card.innerHTML=`No.${c.no||""} ${c.name} <button onclick="editCharacter(${idx})">編集</button> <button onclick="deleteCharacter(${idx})">削除</button>`;
-    }
-    container.appendChild(card);
-  });
-}
-
-function toggleView(){ gridView=!gridView; renderCatalog(); }
-
-// 詳細モーダル
-function showDetail(c,idx){
-  let modal=document.getElementById("modal");
-  let html=`<h2>No.${c.no} ${c.name}</h2>`;
-  c.forms.forEach((f,i)=>{
-    html+=`<h3>第${i+1}形態 ${f.formName}</h3>
-      <img src="${f.image}" style="max-width:100px"><p>${f.formDesc}</p>
-      <ul><li>体力:${f.hp}</li><li>攻撃:${f.atk}</li><li>DPS:${f.dps}</li></ul>`;
-  });
-  html+=`<button onclick="editCharacter(${idx})">編集</button>
-         <button onclick="deleteCharacter(${idx})">削除</button>`;
-  document.getElementById("modalContent").innerHTML=html;
-  modal.style.display="flex";
-  modal.onclick=()=>modal.style.display="none";
-}
-
-// 編集
-function editCharacter(idx){
-  let c=characters[idx];
-  document.getElementById("charNo").value=c.no;
-  document.getElementById("charName").value=c.name;
-  document.querySelectorAll("input[name=rarity]").forEach(r=>r.checked=c.rarity.includes(r.value));
-  c.forms.forEach((f,i)=>{
-    document.getElementById(`form${i+1}Name`).value=f.formName;
-    document.getElementById(`form${i+1}Desc`).value=f.formDesc;
-    document.getElementById(`form${i+1}ImagePreview`).src=f.image;
-    document.getElementById(`form${i+1}HP`).value=f.hp;
-    document.getElementById(`form${i+1}Atk`).value=f.atk;
-    document.getElementById(`form${i+1}Range`).value=f.range;
-    document.getElementById(`form${i+1}DPS`).value=f.dps;
-    document.getElementById(`form${i+1}Cost`).value=f.cost;
-    document.getElementById(`form${i+1}KB`).value=f.kb;
-    document.getElementById(`form${i+1}Speed`).value=f.speed;
-    document.getElementById(`form${i+1}Respawn`).value=f.respawn;
-    document.getElementById(`form${i+1}Startup`).value=f.startup;
-    document.getElementById(`form${i+1}Interval`).value=f.interval;
-    document.getElementById(`traits${i+1}`).innerHTML="";
-    f.traits.forEach(t=>{
-      let div=document.createElement("div");
-      div.className="trait";
-      div.innerHTML=`<input value="${t.name}"><input value="${t.prob}"><input value="${t.duration}"><input value="${t.level}">`;
-      document.getElementById(`traits${i+1}`).appendChild(div);
+  let list=document.getElementById("catalogList");
+  list.innerHTML="";
+  if(viewMode==="list"){
+    characters.forEach((c,i)=>{
+      list.innerHTML+=`<div class="char-card">
+        No.${c.no} ${c.forms[0].name||""}
+        <button onclick="editChar(${i})">編集</button>
+        <button onclick="deleteChar(${i})">削除</button>
+      </div>`;
     });
-  });
-  editIndex=idx;
-  showTab("register");
+  } else {
+    list.className="grid";
+    characters.forEach((c,i)=>{
+      list.innerHTML+=`<div class="grid-item" onclick="showDetail(${i})">
+        <img src="${c.forms[0].image||""}">
+        ${document.getElementById("gridShowNo").checked?("No."+c.no):""}
+      </div>`;
+    });
+  }
 }
 
-// 削除→ゴミ箱
-function deleteCharacter(idx){
-  let c=characters.splice(idx,1)[0];
-  c.deletedAt=Date.now();
-  trash.push(c);
-  saveData();
-  renderCatalog();
+function setView(mode){ viewMode=mode; renderCatalog(); }
+
+function editChar(i){
+  let c=characters[i]; editIndex=i; showTab("register");
+  document.getElementById("charNo").value=c.no;
+  document.querySelectorAll(".rarity").forEach(r=>r.checked=c.rarities.includes(r.value));
+  for(let j=1;j<=4;j++){
+    let f=c.forms[j-1];
+    if(!f) continue;
+    document.getElementById(`form${j}Name`).value=f.name;
+    document.getElementById(`form${j}Desc`).value=f.desc;
+    document.getElementById(`form${j}ImagePreview`).src=f.image;
+    document.getElementById(`form${j}HP`).value=f.hp;
+    document.getElementById(`form${j}Atk`).value=f.atk;
+    document.getElementById(`form${j}Range`).value=f.range;
+    document.getElementById(`form${j}DPS`).value=f.dps;
+    document.getElementById(`form${j}Cost`).value=f.cost;
+    document.getElementById(`form${j}KB`).value=f.kb;
+    document.getElementById(`form${j}Speed`).value=f.speed;
+    document.getElementById(`form${j}Respawn`).value=f.respawn;
+    document.getElementById(`form${j}Start`).value=f.start;
+    document.getElementById(`form${j}Freq`).value=f.freq;
+    document.getElementById(`form${j}Attr`).value=f.attr;
+    document.getElementById(`traits${j}`).innerHTML="";
+    f.traits.forEach(t=>{
+      document.getElementById(`traits${j}`).innerHTML+=`<div>
+        名称:<input class="traitName" value="${t.name}">
+        確率:<input type="number" class="traitChance" value="${t.chance}">%
+        効果時間:<input type="number" class="traitDuration" value="${t.duration}">秒
+        属性:<input class="traitAttr" value="${t.attr}">
+      </div>`;
+    });
+  }
 }
 
-// ゴミ箱表示
+function deleteChar(i){
+  trash.push({...characters[i],deleted:Date.now()});
+  characters.splice(i,1); saveData(); renderCatalog();
+}
+
 function renderTrash(){
-  let div=document.getElementById("trash");
-  div.innerHTML="";
-  trash.forEach((c,idx)=>{
-    div.innerHTML+=`<div>No.${c.no} ${c.name}
-      <button onclick="restore(${idx})">復元</button>
-      <button onclick="purge(${idx})">完全削除</button></div>`;
-  });
-}
-
-// 復元
-function restore(idx){
-  let c=trash.splice(idx,1)[0];
-  delete c.deletedAt;
-  characters.push(c);
-  saveData();
-  renderTrash();
-}
-
-// 完全削除
-function purge(idx){
-  trash.splice(idx,1);
-  saveData();
-  renderTrash();
-}
-
-// 7日で自動削除
-function cleanupTrash(){
+  let list=document.getElementById("trashList"); list.innerHTML="";
   let now=Date.now();
-  trash=trash.filter(c=>now-c.deletedAt<7*24*60*60*1000);
+  trash=trash.filter(c=>(now-c.deleted)<7*24*60*60*1000);
+  trash.forEach((c,i)=>{
+    list.innerHTML+=`<div class="char-card">
+      No.${c.no} ${c.forms[0].name||""}
+      <button onclick="restoreChar(${i})">復元</button>
+      <button onclick="purgeChar(${i})">完全削除</button>
+    </div>`;
+  });
   saveData();
 }
-</script>
-</body>
-</html>
+function restoreChar(i){ characters.push(trash[i]); trash.splice(i,1); saveData(); renderTrash(); }
+function purgeChar(i){ trash.splice(i,1); saveData(); renderTrash(); }
+
+function showDetail(i){
+  let c=characters[i];
+  let modal=document.getElementById("detailModal");
+  let html=`<h3>No.${c.no} ${c.forms[0].name||""}</h3>`;
+  c.forms.forEach((f,idx)=>{
+    if(!f.name) return;
+    html+=`<h4>第${idx+1}形態 ${f.name}</h4>
+      <img src="${f.image||""}" style="width:100px;height:100px"><br>
+      体力:${f.hp} 攻撃:${f.atk} DPS:${f.dps}<br>
+      射程:${f.range} コスト:${f.cost} KB:${f.kb}<br>
+      移動速度:${f.speed} 再生産:${f.respawn}<br>
+      攻撃発生:${f.start} 攻撃頻度:${f.freq}<br>
+      属性:${f.attr}<br>
+      <p>${f.desc.replace(/\\n/g,"<br>")}</p>
+      <ul>${f.traits.map(t=>`<li>${t.name} ${t.chance}% ${t.duration}秒 属性:${t.attr}</li>`).join("")}</ul>`;
+  });
+  html+=`<button onclick="editChar(${i});closeModal()">編集</button>
+         <button onclick="deleteChar(${i});closeModal()">削除</button>`;
+  document.getElementById("detailContent").innerHTML=html
