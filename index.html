@@ -2,273 +2,241 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>にゃんこ図鑑（第4形態＋詳細ステ対応）</title>
+  <title>にゃんこ図鑑 Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- ホーム画面追加用 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="にゃんこ図鑑">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif; padding: 16px; }
-    h1 { text-align: center; margin: 8px 0 16px; }
-    #add-form { margin-bottom: 16px; }
-    .row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .row > input, .row > select { flex: 1; min-width: 140px; }
-    .form-block { margin: 12px 0; border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
-    .form-block h3 { margin: 0 0 8px; }
-    button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
-    button:active { transform: scale(0.98); }
-    #cat-list { margin-top: 12px; }
-    .cat-card {
-      border: 1px solid #aaa; border-radius: 10px; padding: 10px; margin: 8px 0;
-      display: flex; align-items: center; justify-content: space-between;
-      transition: background 0.15s; gap: 8px;
-    }
-    .cat-card:hover { background: #f7f7f7; }
-    .cat-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .cat-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: #eee; }
-    .cat-text h3 { margin: 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .meta { color: #666; font-size: 12px; }
-    .card-buttons { display: flex; gap: 6px; }
-    .danger { border-color: #e66; color: #b00; }
-    .primary { border-color: #2a7; color: #0a5; }
-    #modal {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-      justify-content: center; align-items: center; padding: 12px;
-    }
-    #modal-content {
-      background: #fff; width: 100%; max-width: 560px; border-radius: 12px; padding: 16px; max-height: 90vh; overflow: auto;
-      animation: fadeIn .2s ease;
-    }
-    #modal h2 { margin: 0 0 8px; text-align: center; }
-    .tabs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; }
-    .tab-btn { padding: 6px 10px; border-radius: 999px; border: 1px solid #aaa; background: #fff; }
-    .tab-btn.active { background: #222; color: #fff; border-color: #222; }
-    .detail img { width: 120px; height: 120px; object-fit: cover; display: block; margin: 0 auto 8px; border-radius: 12px; background: #eee; }
-    table { width: 100%; border-collapse: collapse; }
-    td { border-top: 1px solid #eee; padding: 6px; font-size: 14px; }
-    td:first-child { width: 38%; color: #555; }
-    .close-wrap { text-align: center; margin-top: 10px; }
-    .toolbar { display: flex; gap: 8px; margin: 8px 0 12px; }
-    .toolbar input { flex: 1; }
-    @keyframes fadeIn { from {opacity:0; transform: translateY(4px);} to {opacity:1; transform: none;} }
+    body { font-family: -apple-system, sans-serif; margin: 0; }
+    header { background:#222; color:#fff; padding:10px; display:flex; justify-content:space-between; align-items:center; }
+    header h1 { font-size:18px; margin:0; }
+    nav button { margin:0 4px; }
+    #unit-select { margin-left:10px; }
+    .tab { display:none; padding:10px; }
+    .tab.active { display:block; }
+    .form-block { border:1px solid #ccc; padding:8px; margin:8px 0; border-radius:6px; }
+    .row { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0; }
+    .row input, .row select, .row textarea { flex:1; min-width:120px; }
+    .cat-card { border:1px solid #aaa; border-radius:6px; margin:6px 0; padding:6px; display:flex; justify-content:space-between; align-items:center; }
+    .cat-card img { width:50px; height:50px; object-fit:cover; border-radius:6px; margin-right:6px; }
+    .traits { margin-top:6px; font-size:13px; }
+    .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; }
+    .modal-content { background:#fff; padding:16px; border-radius:8px; width:90%; max-width:600px; max-height:90%; overflow:auto; }
+    .tab-btn.active { background:#222; color:#fff; }
   </style>
 </head>
 <body>
-  <h1>🐱 にゃんこ図鑑（第4形態対応）</h1>
+  <header>
+    <h1>🐱 にゃんこ図鑑 Pro</h1>
+    <div>
+      単位:
+      <select id="unit-select" onchange="renderList()">
+        <option value="sec">秒</option>
+        <option value="f30">フレーム(iOS30fps)</option>
+        <option value="f27">フレーム(Android27fps)</option>
+      </select>
+    </div>
+  </header>
+  <nav>
+    <button onclick="showTab('catalog')">図鑑</button>
+    <button onclick="showTab('add')">追加</button>
+    <button onclick="exportData()">エクスポート</button>
+    <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+    <button onclick="document.getElementById('importFile').click()">インポート</button>
+  </nav>
 
-  <!-- 検索 & 並び替え -->
-  <div class="toolbar">
-    <input type="search" id="q" placeholder="検索（No./名前部分一致）" oninput="renderList()">
-    <select id="sortKey" onchange="renderList()">
-      <option value="no">No.順</option>
-      <option value="name">名前順</option>
-      <option value="added">追加順</option>
-    </select>
+  <div id="catalog" class="tab active">
+    <h2>図鑑</h2>
+    <div id="cat-list"></div>
   </div>
 
-  <!-- 入力フォーム -->
-  <div id="add-form">
+  <div id="add" class="tab">
+    <h2>キャラ追加</h2>
     <input type="hidden" id="editIndex">
     <div class="row">
-      <input type="text" id="no" inputmode="numeric" placeholder="No.（手入力）">
-      <input type="text" id="name" placeholder="キャラ名">
+      <input id="no" placeholder="No.">
+      <input id="name" placeholder="キャラ名">
       <select id="rarity">
-        <option value="基本">基本</option>
-        <option value="EX">EX</option>
-        <option value="レア">レア</option>
-        <option value="激レア">激レア</option>
-        <option value="超激レア">超激レア</option>
-        <option value="伝説レア">伝説レア</option>
+        <option>基本</option><option>EX</option><option>レア</option>
+        <option>激レア</option><option>超激レア</option><option>伝説レア</option>
       </select>
-      <button class="primary" onclick="saveCat()">保存</button>
     </div>
+    <textarea id="desc" placeholder="キャラ説明"></textarea>
 
-    <!-- 第1〜第4形態入力欄 -->
-    <script>
-      const stats = ["icon","hp","atk","range","dps","cost","kb","speed","respawn","startup","interval","ability","attribute"];
-      function formBlock(i){
-        return `
-        <div class="form-block">
-          <h3>第${i}形態</h3>
-          <div class="row">
-            <input type="text" id="icon${i}" placeholder="アイコンURL">
-            <input type="number" id="hp${i}" placeholder="体力">
-            <input type="number" id="atk${i}" placeholder="攻撃力">
-            <input type="number" id="range${i}" placeholder="射程">
-          </div>
-          <div class="row">
-            <input type="number" id="dps${i}" placeholder="DPS（空なら自動計算）" step="0.1">
-            <input type="number" id="cost${i}" placeholder="コスト">
-            <input type="number" id="kb${i}" placeholder="KB数">
-            <input type="number" id="speed${i}" placeholder="移動速度">
-          </div>
-          <div class="row">
-            <input type="number" id="respawn${i}" placeholder="最生産時間（秒）" step="0.1">
-            <input type="number" id="startup${i}" placeholder="攻撃発生（秒）" step="0.01">
-            <input type="number" id="interval${i}" placeholder="攻撃頻度（秒）" step="0.01">
-          </div>
-          <div class="row">
-            <input type="text" id="ability${i}" placeholder="能力">
-            <input type="text" id="attribute${i}" placeholder="対応属性">
-          </div>
-        </div>`;
-      }
-      document.write([1,2,3,4].map(formBlock).join(""));
-    </script>
+    <!-- 形態 -->
+    <div id="forms"></div>
+
+    <button onclick="saveCat()">保存</button>
   </div>
-
-  <!-- 一覧 -->
-  <div id="cat-list"></div>
 
   <!-- モーダル -->
-  <div id="modal">
-    <div id="modal-content">
+  <div id="modal" class="modal">
+    <div class="modal-content">
       <h2 id="m-name"></h2>
-      <div class="meta" id="m-meta" style="text-align:center;"></div>
-      <div class="tabs" id="tabs"></div>
-      <div class="detail" id="form-detail"></div>
-      <div class="close-wrap"><button onclick="closeModal()">閉じる</button></div>
+      <div id="tabs"></div>
+      <div id="form-detail"></div>
+      <button onclick="closeModal()">閉じる</button>
     </div>
   </div>
 
-  <script>
-    let cats = [];
-    window.onload = () => { const saved = localStorage.getItem("cats"); if (saved) cats = JSON.parse(saved); renderList(); };
-    function save(){ localStorage.setItem("cats", JSON.stringify(cats)); }
-    function toNum(v){ return v===""?null:Number(v); }
-
-    function collectForm(i){
-      return {
-        icon: document.getElementById("icon"+i).value.trim(),
-        hp: toNum(document.getElementById("hp"+i).value),
-        atk: toNum(document.getElementById("atk"+i).value),
-        range: toNum(document.getElementById("range"+i).value),
-        dps: toNum(document.getElementById("dps"+i).value),
-        cost: toNum(document.getElementById("cost"+i).value),
-        kb: toNum(document.getElementById("kb"+i).value),
-        speed: toNum(document.getElementById("speed"+i).value),
-        respawn: toNum(document.getElementById("respawn"+i).value),
-        startup: toNum(document.getElementById("startup"+i).value),
-        interval: toNum(document.getElementById("interval"+i).value),
-        ability: document.getElementById("ability"+i).value.trim(),
-        attribute: document.getElementById("attribute"+i).value.trim()
-      };
-    }
-
-    function resetForm(){
-      document.getElementById("editIndex").value="";
-      document.querySelectorAll("#add-form input").forEach(el=>{ if(el.type!=="hidden") el.value=""; });
-      document.getElementById("rarity").value="基本";
-    }
-
-    function saveCat(){
-      const no=document.getElementById("no").value.trim();
-      const name=document.getElementById("name").value.trim();
-      const rarity=document.getElementById("rarity").value;
-      if(!name) return alert("キャラ名を入力してね！");
-      const forms=[1,2,3,4].map(collectForm);
-      const payload={no:no||null,name,rarity,forms,addedAt:Date.now()};
-      const idx=document.getElementById("editIndex").value;
-      if(idx!=="") cats[Number(idx)]=payload; else cats.push(payload);
-      save(); renderList(); resetForm();
-    }
-
-    function editCat(i,e){
-      if(e) e.stopPropagation();
-      const c=cats[i];
-      document.getElementById("editIndex").value=i;
-      document.getElementById("no").value=c.no??"";
-      document.getElementById("name").value=c.name;
-      document.getElementById("rarity").value=c.rarity;
-      c.forms.forEach((f,idx)=>{
-        const n=idx+1;
-        document.getElementById("icon"+n).value=f.icon||"";
-        document.getElementById("hp"+n).value=f.hp??"";
-        document.getElementById("atk"+n).value=f.atk??"";
-        document.getElementById("range"+n).value=f.range??"";
-        document.getElementById("dps"+n).value=f.dps??"";
-        document.getElementById("cost"+n).value=f.cost??"";
-        document.getElementById("kb"+n).value=f.kb??"";
-        document.getElementById("speed"+n).value=f.speed??"";
-        document.getElementById("respawn"+n).value=f.respawn??"";
-        document.getElementById("startup"+n).value=f.startup??"";
-        document.getElementById("interval"+n).value=f.interval??"";
-        document.getElementById("ability"+n).value=f.ability||"";
-        document.getElementById("attribute"+n).value=f.attribute||"";
-      });
-      window.scrollTo({top:0,behavior:"smooth"});
-    }
-
-    function deleteCat(i,e){
-      if(e) e.stopPropagation();
-      if(confirm("このキャラを削除しますか？")){ cats.splice(i,1); save(); renderList(); }
-    }
-
-    function filtered(){
-      const q=document.getElementById("q").value.trim();
-      let arr=cats.slice();
-      if(q) arr=arr.filter(c=>(c.name&&c.name.includes(q))||(c.no&&c.no.includes(q)));
-      const sortKey=document.getElementById("sortKey").value;
-      if(sortKey==="name") arr.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
-      else if(sortKey==="no") arr.sort((a,b)=>(Number(a.no)||Infinity)-(Number(b.no)||Infinity));
-      else arr.sort((a,b)=>(a.addedAt||0)-(b.addedAt||0));
-      return arr;
-    }
-
-    function renderList(){
-      const list=document.getElementById("cat-list"); list.innerHTML="";
-      filtered().forEach((c,i)=>{
-        const card=document.createElement("div"); card.className="cat-card"; card.onclick=()=>openModal(c);
-        const left=document.createElement("div"); left.className="cat-info";
-        const img=document.createElement("img"); img.src=c.forms?.[0]?.icon||"https://via.placeholder.com/60";
-        const text=document.createElement("div"); text.className="cat-text";
-        text.innerHTML=`<h3>${c.no?`No.${c.no} `:""}${c.name}</h3><div class="meta">${c.rarity||""} ／ 形態:${c.forms?.length||0}</div>`;
-        left.appendChild(img); left.appendChild(text);
-        const right=document.createElement("div"); right.className="card-buttons";
-        const eb=document.createElement("button"); eb.textContent="修正"; eb.onclick=(ev)=>editCat(i,ev);
-        const db=document.createElement("button"); db.textContent="削除"; db.className="danger"; db.onclick=(ev)=>deleteCat(i,ev);
-        right.appendChild(eb); right.appendChild(db);
-        card.appendChild(left); card.appendChild(right);
-        list.appendChild(card);
-      });
-    }
-
-    function openModal(cat){
-      document.getElementById("m-name").textContent=(cat.no?`No.${cat.no} `:"")+cat.name;
-      document.getElementById("m-meta").textContent=`レアリティ：${cat.rarity}`;
-      const tabs=document.getElementById("tabs"); const detail=document.getElementById("form-detail");
-      tabs.innerHTML=""; detail.innerHTML="";
-      cat.forms.forEach((f,i)=>{
-        const b=document.createElement("button"); b.className="tab-btn"; b.textContent=`第${i+1}形態`;
-        b.onclick=()=>showForm(f,i); tabs.appendChild(b);
-      });
-      showForm(cat.forms[0],0);
-      document.getElementById("modal").style.display="flex";
-    }
-
-    function calcDps(f){ if(!f) return "-"; if(f.dps) return f.dps; if(f.atk&&f.interval) return (f.atk/f.interval).toFixed(1); return "-"; }
-    function fmt(v,u=""){ return (v===null||v===undefined||v==="")?"-":v+u; }
-    function escapeHtml(s){ return (s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
-
-    function showForm(f={},i=0){
-      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-      if(document.querySelectorAll(".tab-btn")[i]) document.querySelectorAll(".tab-btn")[i].classList.add("active");
-      const icon=f.icon||"https://via.placeholder.com/120";
-      document.getElementById("form-detail").innerHTML=`
-        <img src="${icon}">
-        <table>
-          <tr><td>体力</td><td>${fmt(f.hp)}</td></tr>
-          <tr><td>攻撃力</td><td>${fmt(f.atk)}</td></tr>
-          <tr><td>DPS</td><td>${calcDps(f)}</td></tr>
-          <tr><td>射程</td><td>${fmt(f.range)}</td></tr>
-          <tr><td>コスト</td><td>${fmt(f.cost)}</td></tr>
-          <tr><td>KB数</td><td>${fmt(f.kb)}</td></tr>
-          <tr><td>移動速度</td><td>${fmt(f.speed)}</td></tr>
-          <tr><td>最生産時間</td><td>${fmt(f.respawn,"秒")}</td></tr>
-          <tr><td>攻撃発生</td><td>${fmt(f.startup,"秒")}</td></tr>
-          <tr><td>攻撃頻度</td><td>${fmt(f.interval,"秒")}</td></tr>
-          <tr><td>能力</td><td>${escapeHtml(f.ability||"")}</td></tr>
-          <tr><td>対応属性</td><td>${escapeHtml(f.attribute||"")}</td></tr>
-        </table>`;
-    }
-    function closeModal(){ document.getElementById("modal").style.display="none"; }
-  </script>
+<script>
+let cats=[];
+const MAX_FORMS=4;
+const UNIT=()=>document.getElementById("unit-select").value;
+function toFrames(sec,fps){return (sec*fps).toFixed(1);}
+function toSec(frames,fps){return (frames/fps).toFixed(2);}
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+window.onload=()=>{
+  const saved=localStorage.getItem("cats");
+  if(saved) cats=JSON.parse(saved);
+  renderList();
+  renderFormInputs();
+};
+function renderFormInputs(){
+  const formsDiv=document.getElementById("forms");
+  formsDiv.innerHTML="";
+  for(let i=1;i<=MAX_FORMS;i++){
+    formsDiv.innerHTML+=`
+    <div class="form-block">
+      <h3>第${i}形態</h3>
+      <input type="file" accept="image/*" onchange="handleImageUpload(event,${i})"><br>
+      <img id="preview${i}" style="width:60px;height:60px"><br>
+      <div class="row">
+        <input id="hp${i}" type="number" placeholder="体力">
+        <input id="atk${i}" type="number" placeholder="攻撃力">
+        <input id="range${i}" type="number" placeholder="射程">
+        <input id="cost${i}" type="number" placeholder="コスト">
+      </div>
+      <div class="row">
+        <input id="kb${i}" type="number" placeholder="KB数">
+        <input id="speed${i}" type="number" placeholder="移動速度">
+        <input id="respawn${i}" type="number" placeholder="最生産時間(秒)">
+      </div>
+      <div class="row">
+        <input id="startup${i}" type="number" placeholder="攻撃発生(秒)">
+        <input id="interval${i}" type="number" placeholder="攻撃頻度(秒)">
+      </div>
+      <div id="traits${i}"></div>
+      <button onclick="addTrait(${i})">特性追加</button>
+      <textarea id="ability${i}" placeholder="能力"></textarea>
+      <textarea id="attribute${i}" placeholder="対応属性"></textarea>
+    </div>`;
+  }
+}
+function handleImageUpload(e,i){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{document.getElementById("preview"+i).src=reader.result;};
+  reader.readAsDataURL(file);
+}
+function addTrait(formIndex){
+  const div=document.getElementById("traits"+formIndex);
+  const id=Date.now();
+  div.insertAdjacentHTML("beforeend",`
+    <div class="row trait" data-id="${id}">
+      <input placeholder="特性名">
+      <input type="number" placeholder="確率(%)">
+      <input type="number" placeholder="効果時間(秒)">
+      <input type="number" placeholder="レベル">
+      <button onclick="this.parentElement.remove()">✕</button>
+    </div>`);
+}
+function saveCat(){
+  const idx=document.getElementById("editIndex").value;
+  const name=document.getElementById("name").value;
+  if(!name)return alert("名前必須");
+  const cat={no:document.getElementById("no").value,name,rarity:document.getElementById("rarity").value,
+             desc:document.getElementById("desc").value,forms:[]};
+  for(let i=1;i<=MAX_FORMS;i++){
+    const form={
+      icon:document.getElementById("preview"+i).src||"",
+      hp:+document.getElementById("hp"+i).value||null,
+      atk:+document.getElementById("atk"+i).value||null,
+      range:+document.getElementById("range"+i).value||null,
+      cost:+document.getElementById("cost"+i).value||null,
+      kb:+document.getElementById("kb"+i).value||null,
+      speed:+document.getElementById("speed"+i).value||null,
+      respawn:+document.getElementById("respawn"+i).value||null,
+      startup:+document.getElementById("startup"+i).value||null,
+      interval:+document.getElementById("interval"+i).value||null,
+      ability:document.getElementById("ability"+i).value,
+      attribute:document.getElementById("attribute"+i).value,
+      traits:[]
+    };
+    document.querySelectorAll(`#traits${i} .trait`).forEach(tr=>{
+      const t=tr.querySelectorAll("input");
+      form.traits.push({name:t[0].value,prob:+t[1].value||null,duration:+t[2].value||null,lv:+t[3].value||null});
+    });
+    cat.forms.push(form);
+  }
+  if(idx!==""){cats[idx]=cat;} else cats.push(cat);
+  localStorage.setItem("cats",JSON.stringify(cats));
+  renderList(); showTab('catalog');
+}
+function renderList(){
+  const list=document.getElementById("cat-list"); list.innerHTML="";
+  cats.forEach((c,i)=>{
+    const card=document.createElement("div"); card.className="cat-card";
+    card.innerHTML=`<div style="display:flex;align-items:center">
+      <img src="${c.forms[0].icon||'https://via.placeholder.com/50'}">
+      <div><b>No.${c.no||''} ${c.name}</b><br><small>${c.rarity}</small></div>
+    </div>
+    <div><button onclick="openModal(${i})">詳細</button></div>`;
+    list.appendChild(card);
+  });
+}
+function openModal(i){
+  const cat=cats[i];
+  document.getElementById("m-name").innerText=`No.${cat.no||''} ${cat.name}`;
+  const tabs=document.getElementById("tabs"); tabs.innerHTML="";
+  const detail=document.getElementById("form-detail"); detail.innerHTML="";
+  cat.forms.forEach((f,idx)=>{
+    const b=document.createElement("button"); b.className="tab-btn"; b.innerText=`第${idx+1}形態`;
+    b.onclick=()=>showForm(f,idx); tabs.appendChild(b);
+  });
+  showForm(cat.forms[0],0);
+  document.getElementById("modal").style.display="flex";
+}
+function showForm(f,idx){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".tab-btn")[idx].classList.add("active");
+  const u=UNIT(); const fps=(u==="f30"?30:(u==="f27"?27:null));
+  const conv=(v)=>{if(v==null)return"-"; if(u==="sec")return v+"秒"; return toFrames(v,fps)+"f";};
+  let html=`<img src="${f.icon||'https://via.placeholder.com/100'}"><table>`;
+  html+=`<tr><td>体力</td><td>${f.hp||"-"}</td></tr>
+         <tr><td>攻撃力</td><td>${f.atk||"-"}</td></tr>
+         <tr><td>射程</td><td>${f.range||"-"}</td></tr>
+         <tr><td>コスト</td><td>${f.cost||"-"}</td></tr>
+         <tr><td>KB数</td><td>${f.kb||"-"}</td></tr>
+         <tr><td>移動速度</td><td>${f.speed||"-"}</td></tr>
+         <tr><td>最生産時間</td><td>${f.respawn||"-"}秒</td></tr>
+         <tr><td>攻撃発生</td><td>${conv(f.startup)}</td></tr>
+         <tr><td>攻撃頻度</td><td>${conv(f.interval)}</td></tr>
+         <tr><td>能力</td><td>${f.ability||""}</td></tr>
+         <tr><td>対応属性</td><td>${f.attribute||""}</td></tr>`;
+  html+="</table>";
+  if(f.traits&&f.traits.length){html+="<div class='traits'><b>特性</b><ul>";
+    f.traits.forEach(t=>{
+      html+=`<li>${t.name} ${t.prob||""}% Lv${t.lv||""} ${t.duration?(conv(t.duration)):""}</li>`;
+    }); html+="</ul></div>";
+  }
+  document.getElementById("form-detail").innerHTML=html;
+}
+function closeModal(){document.getElementById("modal").style.display="none";}
+function exportData(){
+  const blob=new Blob([JSON.stringify(cats)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="nyanko.json"; a.click();
+}
+function importData(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader(); reader.onload=()=>{cats=JSON.parse(reader.result); localStorage.setItem("cats",reader.result); renderList();};
+  reader.readAsText(file);
+}
+</script>
 </body>
 </html>
